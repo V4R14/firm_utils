@@ -9,13 +9,13 @@ pragma solidity >=0.8.0;
 
 /// @title Address Verifier
 /// @notice on-chain address verification for client onboarding or third party request by requesting a specific amount of wei along with an on-chain signature
-/// @dev auto-transfers wei to firm and returns provided amount of wei (msg.value) and _sig hash
+/// @dev auto-transfers wei to firm (deployer) and returns provided amount of wei (msg.value), boolean signature confirmation and _sig hash
 
 contract AddressVerifier {
 
     address payable firm;
     
-    error SubmitWeiAmount(); // if client does not send requested confidential wei amount
+    error SubmitWeiAmount(); 
 
     constructor() payable {
         firm = payable(msg.sender);
@@ -23,11 +23,11 @@ contract AddressVerifier {
 
     /// @param _sig client signature or instructed reference from firm
     /// @notice client should submit precise amount of wei to this contract address as directed by firm, along with name or other reference as _input
-    /// @return 4 byte hash of the input
-    function submitVerification(string calldata _sig) external payable returns (uint256, bytes4) {
-        if (msg.value == 0) revert SubmitWeiAmount(); // revert if zero wei sent
-        firm.call{ value: address(this).balance }; // send dust to firm address instead of accumulating in this contract, also sending any ETH accumulated from receive()
-        return(msg.value, bytes4(keccak256(bytes(_sig))));
+    /// @return 4 byte hash of the input, boolean signature completion, and msg.value in wei as requested by firm
+    function submitVerification(string calldata _sig) external payable returns (uint256, bool, bytes4) {
+        if (msg.value == 0) revert SubmitWeiAmount(); // revert if zero wei sent - firm will request nonzero amount for verification
+        (bool _signed, ) = firm.call{ value: address(this).balance }(""); // send dust to firm address instead of accumulating in this contract, also sending any ETH accumulated from receive()
+        return(msg.value, _signed, bytes4(keccak256(bytes(_sig))));
     }
 
     receive() external payable {} // in case ETH is sent without data/without calling submitVerification
