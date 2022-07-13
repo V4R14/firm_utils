@@ -1,14 +1,16 @@
 //SPDX-License-Identifier: MIT
 /****
- ***** this code and any deployments of this code are strictly provided as-is; no guarantee, representation or warranty is being made, express or implied, as to the safety or correctness of the code
- ***** or any smart contracts or other software deployed from these files, in accordance with the disclosures and licenses found here: https://github.com/V4R14/firm_utils/blob/main/LICENSE
+ ***** this code and any deployments of this code are strictly provided as-is;
+ ***** no guarantee, representation or warranty is being made, express or implied, as to the safety or correctness of the code
+ ***** or any smart contracts or other software deployed from these files,
+ ***** in accordance with the disclosures and licenses found here: https://github.com/V4R14/firm_utils/blob/main/LICENSE
  ***** this code is not audited, and users, developers, or adapters of these files should proceed with caution and use at their own risk.
  *****
  ****/
 
 pragma solidity >=0.8.4;
 
-/// @title Pay In ETH to USDC
+/// @title Pay In ETH To USDC
 /// @dev uses Uniswap router to swap incoming ETH for USDC tokens, then sends to receiver address (initially, the deployer)
 /// @notice permits payment for services denominated in ETH but receiving USDC
 
@@ -21,14 +23,14 @@ interface IUniswapV2Router02 {
     ) external payable returns (uint256[] memory amounts);
 }
 
-contract PayInETHtoUSDC {
+contract PayInETHToUSDC {
     address constant UNI_ROUTER_ADDR =
-        0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D; 
+        0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
     address constant USDC_ADDR = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address constant WETH_ADDR = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address receiver;
+    address public receiver;
 
-    IUniswapV2Router02 public uniRouter;
+    IUniswapV2Router02 immutable uniRouter;
 
     error CallerNotCurrentReceiver();
 
@@ -49,11 +51,9 @@ contract PayInETHtoUSDC {
 
     /// @notice allows current receiver address to change the receiver address for payments
     /// @param _newReceiver: new address to receive USDC tokens
-    /// @return receiver: the receiver address
-    function changeReceiver(address _newReceiver) external returns (address) {
+    function changeReceiver(address _newReceiver) external {
         if (msg.sender != receiver) revert CallerNotCurrentReceiver();
         receiver = _newReceiver;
-        return (receiver);
     }
 
     /// @return path: the router path for ETH/USDC swap
