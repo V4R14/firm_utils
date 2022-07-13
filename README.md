@@ -12,4 +12,4 @@ Unless expressly designated otherwise in writing, none of the solidity files her
 |----------|:-------------:| 
 | Address Verifier | ['0x1F48F646145D74DF23E54e0Ccf825764F8854f69'](https://etherscan.io/address/0x1F48F646145D74DF23E54e0Ccf825764F8854f69) |
 | PayInEth | ['0xCA854F65bAf23f11A7027e0653B1Fd420a5a7bE5'](https://etherscan.io/address/0xCA854F65bAf23f11A7027e0653B1Fd420a5a7bE5) | 
-| PayInEthToGUSD | ['0xb4a2e2D2600dDc2cF1892EF4bdAD5c8bA6A91209'](https://etherscan.io/address/0xb4a2e2D2600dDc2cF1892EF4bdAD5c8bA6A91209) |
+| PayInEthToUSDC | ['0xD93Cf69273aa602856608C234bBb240CF736A800'](https://etherscan.io/address/0xd93cf69273aa602856608c234bbb240cf736a800) |
