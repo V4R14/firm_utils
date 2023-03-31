@@ -8,8 +8,9 @@ Unless expressly designated otherwise in writing, none of the solidity files her
 
 ### Deployments
 
-| Name | Ethereum Address | 
-|----------|:-------------:| 
-| Address Verifier | ['0x1F48F646145D74DF23E54e0Ccf825764F8854f69'](https://etherscan.io/address/0x1F48F646145D74DF23E54e0Ccf825764F8854f69) |
-| PayInEth | ['0xCA854F65bAf23f11A7027e0653B1Fd420a5a7bE5'](https://etherscan.io/address/0xCA854F65bAf23f11A7027e0653B1Fd420a5a7bE5) | 
-| PayInEthToUSDC | ['0xD93Cf69273aa602856608C234bBb240CF736A800'](https://etherscan.io/address/0xd93cf69273aa602856608c234bbb240cf736a800) |
+| Contract Name | Address | Network
+|----------|:-------------:| :-------------:| 
+| AddressVerifier | ['0x1F48F646145D74DF23E54e0Ccf825764F8854f69'](https://etherscan.io/address/0x1F48F646145D74DF23E54e0Ccf825764F8854f69) | Ethereum
+|  | ['0x78AD55083Bc6F47678197210816a9467BA1553F3'](https://polygonscan.com/address/0x78ad55083bc6f47678197210816a9467ba1553f3) | Polygon
+| PayInEth | ['0xCA854F65bAf23f11A7027e0653B1Fd420a5a7bE5'](https://etherscan.io/address/0xCA854F65bAf23f11A7027e0653B1Fd420a5a7bE5) | Ethereum
+| PayInEthToUSDC | ['0xD93Cf69273aa602856608C234bBb240CF736A800'](https://etherscan.io/address/0xd93cf69273aa602856608c234bbb240cf736a800) | Ethereum
