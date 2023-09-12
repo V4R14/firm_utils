@@ -16,5 +16,6 @@ Unless expressly designated otherwise in writing, none of the solidity files her
 | Receipt | [0xf838D6829fcCBedCB0B4D8aD58cb99814F935BA8](https://etherscan.io/address/0xf838D6829fcCBedCB0B4D8aD58cb99814F935BA8) | Ethereum
 |  | [0xf838D6829fcCBedCB0B4D8aD58cb99814F935BA8](https://zkevm.polygonscan.com/address/0xf838D6829fcCBedCB0B4D8aD58cb99814F935BA8) | Polygon zkEVM
 |  | [0xf838D6829fcCBedCB0B4D8aD58cb99814F935BA8](https://optimistic.etherscan.io/address/0xf838d6829fccbedcb0b4d8ad58cb99814f935ba8) | Optimism
+|  | [0xf838D6829fcCBedCB0B4D8aD58cb99814F935BA8](https://arbiscan.io/address/0xf838d6829fccbedcb0b4d8ad58cb99814f935ba8) | Arbitrum One
 |  |
 | PayInEthToUSDC | [0xD93Cf69273aa602856608C234bBb240CF736A800](https://etherscan.io/address/0xd93cf69273aa602856608c234bbb240cf736a800) | Ethereum
