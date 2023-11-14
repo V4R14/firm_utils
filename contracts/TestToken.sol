@@ -76,9 +76,10 @@ abstract contract ERC20Permit is ERC20 {
     bytes32 internal constant DOMAIN_TYPEHASH =
         0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f;
 
+    bytes32 public DOMAIN_SEPARATOR;
+
     bytes32 internal hashedDomainName;
     bytes32 internal hashedDomainVersion;
-    bytes32 internal initialDomainSeparator;
     uint256 internal initialChainId;
 
     /// @dev `keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)")`.
@@ -98,8 +99,8 @@ abstract contract ERC20Permit is ERC20 {
     ) ERC20(_name, _symbol, _decimals) {
         hashedDomainName = keccak256(bytes(_name));
         hashedDomainVersion = keccak256(bytes(_version));
-        initialDomainSeparator = _computeDomainSeparator();
         initialChainId = block.chainid;
+        DOMAIN_SEPARATOR = _computeDomainSeparator();
     }
 
     function permit(
@@ -139,11 +140,12 @@ abstract contract ERC20Permit is ERC20 {
         }
     }
 
-    function domainSeparator() public view virtual returns (bytes32) {
-        return
-            block.chainid == initialChainId
-                ? initialDomainSeparator
-                : _computeDomainSeparator();
+     function domainSeparator() public view virtual returns (bytes32) {
+        if (block.chainid == initialChainId) {
+            return DOMAIN_SEPARATOR;
+        } else {
+            return _computeDomainSeparator();
+        }
     }
 
     function _computeDomainSeparator() internal view virtual returns (bytes32) {
