@@ -1,12 +1,12 @@
-# Varia utils
+# Varia Utils
 
-Please note that all forms, templates, code or other materials provided or linked herein carry no warranty whatsoever.
+This repo contains some open source software used or adapted by the firm and some firm policies. 
 
-These files are provided by Varia Law (unless otherwise specified) as-is under the [MIT License](https://github.com/V4R14/firm_utils/blob/main/LICENSE); no guarantee, representation or warranty is being made, express or implied, as to the safety or correctness of any documents, writings, code or any smart contracts or other software deployed from these files.
+For more on the firm's services, please visit [varia.law](https://varia.law/) or email contact@varia.law. 
 
-Unless expressly designated otherwise in writing, none of the solidity files herein have been audited and as such there can be no assurance they will work as intended, and users may experience delays, failures, errors, omissions or loss of transmitted information. Any users, developers, or adapters of these files should proceed with caution and use at their own risk.
+*Please note that all forms, templates, deployments, code or other software or materials of any kind provided or linked herein ("Materials") are provided by Varia Law (unless otherwise specified) as-is with no warranty whatsoever under the [MIT License](https://github.com/V4R14/firm_utils/blob/main/LICENSE); no guarantee, representation or warranty is being made, express or implied, as to the safety or correctness of any Materials.*
 
-### Contract Addresses
+### Deployments
 
 | Contract Name | Address | Network
 |:-------------:|:-------------:|:-------------:| 
@@ -21,4 +21,4 @@ Unless expressly designated otherwise in writing, none of the solidity files her
 |  |
 | PayInEthToUSDC | [0xD93Cf69273aa602856608C234bBb240CF736A800](https://etherscan.io/address/0xd93cf69273aa602856608c234bbb240cf736a800) | Ethereum
 
-_*_ _provided by [ChainLocker LLC](https://github.com/ChainLockerLLC/smart-contracts/tree/main)_
+_*_ _provided by [ChainLocker LLC](https://github.com/ChainLockerLLC/smart-contracts/tree/main), a subsidiary of Varia Law_
