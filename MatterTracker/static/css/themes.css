@@ -1,0 +1,278 @@
+/**
+ * Matter Tracker - Theme Definitions
+ * Themes: Varia (default), Retrofuturist, Paper, Greyscale
+ */
+
+/* ==================== BASE (VARIA - Default) ==================== */
+:root,
+[data-theme="varia"] {
+    --bg-gradient-1: #2b2a33;
+    --bg-gradient-2: #1d1a27;
+    --bg-gradient-3: #1b1b1b;
+    --text-color: #ccc;
+    --text-muted: #888;
+    --accent: #39ff14;
+    --purple: #7963b2;
+    --error: #ff5f6d;
+    --warning: #ffb547;
+    --success: #39ff14;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --card-bg: rgba(43, 42, 51, 0.6);
+    --input-bg: rgba(27, 27, 27, 0.8);
+    --hover-bg: rgba(57, 255, 20, 0.08);
+}
+
+/* ==================== GREYSCALE THEME ==================== */
+[data-theme="greyscale"] {
+    --bg-gradient-1: #0a0a0a;
+    --bg-gradient-2: #141414;
+    --bg-gradient-3: #1a1a1a;
+    --text-color: #e0e0e0;
+    --text-muted: #888888;
+    --accent: #ffffff;
+    --purple: #aaaaaa;
+    --error: #ef4444;
+    --warning: #fbbf24;
+    --success: #4ade80;
+    --border-color: #333333;
+    --card-bg: rgba(20, 20, 20, 0.8);
+    --input-bg: rgba(26, 26, 26, 0.9);
+    --hover-bg: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="greyscale"] .sidebar {
+    background: rgba(10, 10, 10, 0.98);
+}
+
+[data-theme="greyscale"] .logo-icon {
+    background: #555;
+}
+
+[data-theme="greyscale"] .nav-item.active {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+[data-theme="greyscale"] .stat-value,
+[data-theme="greyscale"] .table-link {
+    color: #fff;
+}
+
+/* ==================== RETROFUTURIST THEME (70s Sunset Lounge) ==================== */
+[data-theme="retrofuturist"] {
+    --bg-gradient-1: #1a1510;
+    --bg-gradient-2: #262015;
+    --bg-gradient-3: #32291a;
+    --text-color: #f5ead6;
+    --text-muted: #8b7340;
+    --accent: #d4a020;
+    --purple: #e05a1b;
+    --error: #c0392b;
+    --warning: #d4a020;
+    --success: #7a9a50;
+    --border-color: #4a3d28;
+    --card-bg: rgba(38, 32, 21, 0.9);
+    --input-bg: rgba(50, 41, 26, 0.95);
+    --hover-bg: rgba(212, 160, 32, 0.1);
+}
+
+[data-theme="retrofuturist"] body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(212, 160, 32, 0.025) 3px,
+        rgba(212, 160, 32, 0.025) 6px
+    );
+    opacity: 0.8;
+}
+
+[data-theme="retrofuturist"] .sidebar {
+    background: rgba(26, 21, 16, 0.98);
+    border-right-color: #4a3d28;
+}
+
+[data-theme="retrofuturist"] .logo-icon {
+    background: linear-gradient(135deg, #d4a020, #e05a1b);
+    color: #1a1510;
+}
+
+[data-theme="retrofuturist"] .nav-item:hover {
+    color: #d4a020;
+}
+
+[data-theme="retrofuturist"] .nav-item.active {
+    background: rgba(212, 160, 32, 0.15);
+    color: #d4a020;
+}
+
+[data-theme="retrofuturist"] .card {
+    border-color: #4a3d28;
+}
+
+[data-theme="retrofuturist"] .card:hover,
+[data-theme="retrofuturist"] .stat-card:hover {
+    box-shadow: 0 0 15px rgba(212, 160, 32, 0.15);
+}
+
+[data-theme="retrofuturist"] .btn-primary {
+    background: linear-gradient(135deg, #d4a020, #e05a1b);
+    border: none;
+    color: #1a1510;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(224, 90, 27, 0.3);
+}
+
+[data-theme="retrofuturist"] .btn-primary:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 4px 14px rgba(224, 90, 27, 0.4);
+}
+
+[data-theme="retrofuturist"] .form-input:focus,
+[data-theme="retrofuturist"] .form-select:focus,
+[data-theme="retrofuturist"] .form-textarea:focus {
+    border-color: #d4a020;
+    box-shadow: 0 0 0 3px rgba(212, 160, 32, 0.2);
+}
+
+[data-theme="retrofuturist"] .table-link {
+    color: #e05a1b;
+}
+
+[data-theme="retrofuturist"] .table-link:hover {
+    color: #d4a020;
+}
+
+[data-theme="retrofuturist"] .stat-value {
+    color: #d4a020;
+    text-shadow: 0 0 10px rgba(212, 160, 32, 0.4);
+}
+
+[data-theme="retrofuturist"] .progress-step.completed .progress-dot,
+[data-theme="retrofuturist"] .progress-step.current .progress-dot {
+    background: linear-gradient(135deg, #d4a020, #e05a1b);
+    border-color: #d4a020;
+}
+
+[data-theme="retrofuturist"] .status-badge {
+    border: 1px solid #4a3d28;
+}
+
+/* ==================== PAPER THEME (Warm Paper/Sepia) ==================== */
+[data-theme="paper"] {
+    --bg-gradient-1: #f5f0e6;
+    --bg-gradient-2: #e6ddcc;
+    --bg-gradient-3: #d6cdbc;
+    --text-color: #3a3226;
+    --text-muted: #5c5347;
+    --accent: #8b4513;
+    --purple: #0a531d;
+    --error: #8b0000;
+    --warning: #b8860b;
+    --success: #228b22;
+    --border-color: #5c5347;
+    --card-bg: rgba(245, 240, 230, 0.95);
+    --input-bg: rgba(255, 255, 255, 0.9);
+    --hover-bg: rgba(139, 69, 19, 0.08);
+}
+
+[data-theme="paper"] body {
+    background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 50%, var(--bg-gradient-3) 100%);
+}
+
+[data-theme="paper"] .sidebar {
+    background: rgba(232, 224, 208, 0.98);
+    border-right-color: #c4b9a8;
+}
+
+[data-theme="paper"] .logo-icon {
+    background: #8b4513;
+    color: #f5f0e6;
+}
+
+[data-theme="paper"] .nav-item {
+    color: #5c5347;
+}
+
+[data-theme="paper"] .nav-item:hover {
+    color: #8b4513;
+    background: rgba(139, 69, 19, 0.08);
+}
+
+[data-theme="paper"] .nav-item.active {
+    background: rgba(139, 69, 19, 0.12);
+    color: #8b4513;
+}
+
+[data-theme="paper"] .card {
+    border-color: #c4b9a8;
+    box-shadow: 2px 2px 8px rgba(58, 50, 38, 0.1);
+}
+
+[data-theme="paper"] .btn-primary {
+    background: #8b4513;
+    border-color: #8b4513;
+    color: #f5f0e6;
+}
+
+[data-theme="paper"] .btn-primary:hover {
+    background: #6d3610;
+    border-color: #6d3610;
+}
+
+[data-theme="paper"] .form-input,
+[data-theme="paper"] .form-select,
+[data-theme="paper"] .form-textarea {
+    background: #fff;
+    border-color: #c4b9a8;
+    color: #3a3226;
+}
+
+[data-theme="paper"] .form-input:focus,
+[data-theme="paper"] .form-select:focus,
+[data-theme="paper"] .form-textarea:focus {
+    border-color: #8b4513;
+    box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.15);
+}
+
+[data-theme="paper"] .table-link {
+    color: #317e56;
+}
+
+[data-theme="paper"] .table-link:hover {
+    color: #46b47b;
+}
+
+[data-theme="paper"] .stat-value {
+    color: #8b4513;
+}
+
+[data-theme="paper"] th {
+    background: rgba(196, 185, 168, 0.4);
+}
+
+[data-theme="paper"] tr:hover td {
+    background: rgba(139, 69, 19, 0.06);
+}
+
+[data-theme="paper"] .progress-dot {
+    background: #f5f0e6;
+    border-color: #c4b9a8;
+}
+
+[data-theme="paper"] .progress-step.completed .progress-dot {
+    background: #228b22;
+    border-color: #228b22;
+    color: #fff;
+}
+
+[data-theme="paper"] .progress-step.current .progress-dot {
+    background: #8b4513;
+    border-color: #8b4513;
+    color: #fff;
+}

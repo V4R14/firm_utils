@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Payments - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Payments</h1>
+        <p class="page-subtitle">{{ payments|length }} payments recorded</p>
+    </div>
+</div>
+
+<div class="card">
+    {% if payments|length > 0 %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date Received</th>
+                    <th>Invoice</th>
+                    <th>Client</th>
+                    <th>Matter</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Account</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td>{{ payment.date_received }}</td>
+                    <td>
+                        <a href="{{ url_for('invoice_view', id=payment.invoice_id) }}" class="table-link">{{ payment.invoice_number }}</a>
+                    </td>
+                    <td>{{ payment.client_name }}</td>
+                    <td>{{ payment.matter_title }}</td>
+                    <td class="money">${{ "%.2f"|format(payment.amount) }}</td>
+                    <td>{{ payment.method or '—' }}</td>
+                    <td>{{ payment.account or '—' }}</td>
+                    <td>
+                        <form action="{{ url_for('payment_delete', id=payment.id) }}" method="post" class="delete-form" style="display: inline;">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No payments recorded yet</p>
+        <p style="font-size: 13px; margin-top: 8px;">Payments are recorded when you mark invoices as paid.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

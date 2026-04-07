@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}A/R Aging - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">A/R Aging</h1>
+        <p class="page-subtitle">Unpaid invoices bucketed by overdue days</p>
+    </div>
+    <div class="detail-actions">
+        <a href="{{ url_for('report_ar_aging', as_of=as_of, format='csv') }}" class="btn btn-outline">Export CSV</a>
+        <button class="btn btn-primary" onclick="window.print()">Print</button>
+    </div>
+</div>
+
+<div class="card" style="max-width: 900px;">
+    <form method="get" action="{{ url_for('report_ar_aging') }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="as_of">As Of</label>
+                <input id="as_of" type="date" name="as_of" class="form-input" value="{{ as_of }}">
+            </div>
+            <div class="form-group" style="display: flex; align-items: end; gap: 12px;">
+                <button type="submit" class="btn btn-primary">Apply</button>
+                <a href="{{ url_for('report_ar_aging') }}" class="btn btn-outline">Reset</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Summary -->
+<div class="stats-row">
+    {% for bucket in buckets %}
+    <div class="stat-card">
+        <div class="stat-label">{{ bucket }}</div>
+        <div class="stat-value {% if bucket != 'Current' and bucket != 'No Due Date' and totals_by_bucket[bucket] > 0 %}warning{% endif %}">
+            {{ format_money(totals_by_bucket[bucket]) }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Per-client rollup -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">By Client</h3>
+        <span class="card-count">{{ clients|length }}</span>
+    </div>
+
+    {% if clients|length > 0 %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    {% for bucket in buckets %}
+                    <th>{{ bucket }}</th>
+                    {% endfor %}
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in clients %}
+                <tr>
+                    <td>{{ row.client_name }}</td>
+                    {% for bucket in buckets %}
+                    <td class="money">{{ format_money(row[bucket]) }}</td>
+                    {% endfor %}
+                    <td class="money">{{ format_money(row['Total']) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No unpaid invoices</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Detailed list -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Invoices</h3>
+        <span class="card-count">{{ invoices|length }}</span>
+    </div>
+
+    {% if invoices|length > 0 %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Invoice #</th>
+                    <th>Client</th>
+                    <th>Matter</th>
+                    <th>Amount</th>
+                    <th>Date Issued</th>
+                    <th>Due Date</th>
+                    <th>Days</th>
+                    <th>Bucket</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                <tr>
+                    <td><a href="{{ url_for('invoice_view', id=invoice.id) }}" class="table-link">{{ invoice.invoice_number }}</a></td>
+                    <td>{{ invoice.client_name }}</td>
+                    <td>{{ invoice.matter_title }}</td>
+                    <td class="money">${{ "%.2f"|format(invoice.amount) }}</td>
+                    <td>{{ invoice.date_issued }}</td>
+                    <td>{{ invoice.due_date or '—' }}</td>
+                    <td>
+                        {% if invoice.days_overdue_calc is none %}
+                            —
+                        {% else %}
+                            {% if invoice.days_overdue_calc > 0 %}
+                            <span class="overdue">{{ invoice.days_overdue_calc }}</span>
+                            {% else %}
+                            {{ invoice.days_overdue_calc }}
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td><span class="status-badge status-awaiting-response">{{ invoice.aging_bucket }}</span></td>
+                    <td>
+                        <button onclick="openModal('pay-modal-{{ invoice.id }}')" class="btn btn-sm btn-primary">Mark Paid</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No unpaid invoices</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Payment Modals -->
+{% for invoice in invoices %}
+<div id="pay-modal-{{ invoice.id }}" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Mark Invoice #{{ invoice.invoice_number }} as Paid</h3>
+        </div>
+        <form action="{{ url_for('invoice_mark_paid', id=invoice.id) }}" method="post">
+            <div class="form-group">
+                <label class="form-label">Date Received</label>
+                <input type="date" name="date_received" class="form-input" value="{{ now().strftime('%Y-%m-%d') }}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Payment Method</label>
+                <input type="text" name="method" class="form-input" placeholder="e.g., Check, Wire, ACH">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Account</label>
+                <input type="text" name="account" class="form-input" placeholder="e.g., Operating, Trust">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Confirm Payment</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('pay-modal-{{ invoice.id }}')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+

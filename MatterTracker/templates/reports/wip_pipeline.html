@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}WIP & Pipeline - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">WIP & Pipeline</h1>
+        <p class="page-subtitle">Matters by status, needs-invoicing value, and upcoming deadlines</p>
+    </div>
+    <div class="detail-actions">
+        <a href="{{ url_for('report_wip_pipeline', days=horizon_days, format='csv') }}" class="btn btn-outline">Export CSV</a>
+        <button class="btn btn-primary" onclick="window.print()">Print</button>
+    </div>
+</div>
+
+<div class="card" style="max-width: 900px;">
+    <form method="get" action="{{ url_for('report_wip_pipeline') }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="days">Upcoming deadlines window (days)</label>
+                <input id="days" type="number" name="days" class="form-input" min="1" max="365" step="1" value="{{ horizon_days }}">
+            </div>
+            <div class="form-group" style="display: flex; align-items: end; gap: 12px;">
+                <button type="submit" class="btn btn-primary">Apply</button>
+                <a href="{{ url_for('report_wip_pipeline') }}" class="btn btn-outline">Reset</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Status summary -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Matters by Status</h3>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Count</th>
+                    <th>Total (est.)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in status_summary %}
+                <tr>
+                    <td><span class="status-badge status-{{ s.status|lower|replace(' ', '-')|replace('/', '-') }}">{{ s.status }}</span></td>
+                    <td>{{ s.count }}</td>
+                    <td class="money">{{ format_money(s.total) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Needs Invoicing -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-label">Needs Invoicing (Count)</div>
+        <div class="stat-value">{{ needs_invoicing|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Needs Invoicing (Total est.)</div>
+        <div class="stat-value {% if needs_invoicing_total > 0 %}warning{% endif %}">{{ format_money(needs_invoicing_total) }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            Needs Invoicing
+            <span class="card-count">{{ needs_invoicing|length }}</span>
+        </h3>
+    </div>
+
+    {% if needs_invoicing|length > 0 %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Matter</th>
+                    <th>Client</th>
+                    <th>Deadline</th>
+                    <th>Total (est.)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in needs_invoicing %}
+                <tr>
+                    <td><a href="{{ url_for('matter_view', id=m.id) }}" class="table-link">{{ m.title }}</a></td>
+                    <td>{{ m.client_name }}</td>
+                    <td>{{ m.deadline or '—' }}</td>
+                    <td class="money">{{ m.total_amount_display }}</td>
+                    <td>
+                        <a href="{{ url_for('invoice_new', matter_id=m.id) }}" class="btn btn-sm btn-secondary">Create Invoice</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No matters currently need invoicing</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Upcoming deadlines -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            Upcoming Deadlines (next {{ horizon_days }} days)
+            <span class="card-count">{{ upcoming_deadlines|length }}</span>
+        </h3>
+    </div>
+
+    {% if upcoming_deadlines|length > 0 %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Deadline</th>
+                    <th>Matter</th>
+                    <th>Client</th>
+                    <th>Status</th>
+                    <th>Total (est.)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in upcoming_deadlines %}
+                <tr>
+                    <td>
+                        <span class="{% if m.deadline < now().strftime('%Y-%m-%d') %}overdue{% endif %}">{{ m.deadline }}</span>
+                    </td>
+                    <td><a href="{{ url_for('matter_view', id=m.id) }}" class="table-link">{{ m.title }}</a></td>
+                    <td>{{ m.client_name }}</td>
+                    <td><span class="status-badge status-{{ m.status|lower|replace(' ', '-')|replace('/', '-') }}">{{ m.status }}</span></td>
+                    <td class="money">{{ m.total_amount_display }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No deadlines in the next {{ horizon_days }} days</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

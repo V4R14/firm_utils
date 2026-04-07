@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Reports</h1>
+        <p class="page-subtitle">Analysis and exports (fully offline)</p>
+    </div>
+</div>
+
+<div class="dashboard-grid" style="grid-template-columns: repeat(2, 1fr);">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">A/R Aging</h3>
+        </div>
+        <p style="color: var(--text-muted); font-size: 13px; margin-top: -8px;">
+            Unpaid invoices bucketed by overdue days, with per-client rollups.
+        </p>
+        <div style="margin-top: 16px;">
+            <a href="{{ url_for('report_ar_aging') }}" class="btn btn-primary">Open</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">WIP & Pipeline</h3>
+        </div>
+        <p style="color: var(--text-muted); font-size: 13px; margin-top: -8px;">
+            Matters by status, “Needs Invoicing” value, and upcoming deadlines.
+        </p>
+        <div style="margin-top: 16px;">
+            <a href="{{ url_for('report_wip_pipeline') }}" class="btn btn-primary">Open</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Client Financial Summary</h3>
+        </div>
+        <p style="color: var(--text-muted); font-size: 13px; margin-top: -8px;">
+            WIP totals, needs-invoicing totals, and invoice totals by client.
+        </p>
+        <div style="margin-top: 16px;">
+            <a href="{{ url_for('report_clients') }}" class="btn btn-primary">Open</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Outstanding Invoices (legacy)</h3>
+        </div>
+        <p style="color: var(--text-muted); font-size: 13px; margin-top: -8px;">
+            Quick list of unpaid invoices with overdue highlighting.
+        </p>
+        <div style="margin-top: 16px;">
+            <a href="{{ url_for('report_outstanding') }}" class="btn btn-outline">Open</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

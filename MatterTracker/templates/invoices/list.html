@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Invoices - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Invoices</h1>
+        <p class="page-subtitle">{{ invoices|length }} invoices{% if current_status %} with status "{{ current_status }}"{% endif %}</p>
+    </div>
+    <a href="{{ url_for('invoice_new') }}" class="btn btn-primary">+ New Invoice</a>
+</div>
+
+<!-- Status Filter -->
+<div class="filter-row">
+    <a href="{{ url_for('invoices_list') }}" class="filter-btn {% if not current_status %}active{% endif %}">All</a>
+    {% for status in invoice_statuses %}
+    <a href="{{ url_for('invoices_list', status=status) }}" class="filter-btn {% if current_status == status %}active{% endif %}">
+        {{ status }}
+    </a>
+    {% endfor %}
+</div>
+
+<div class="card">
+    {% if invoices|length > 0 %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Invoice #</th>
+                    <th>Client</th>
+                    <th>Matter</th>
+                    <th>Amount</th>
+                    <th>Date Issued</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('invoice_view', id=invoice.id) }}" class="table-link">{{ invoice.invoice_number }}</a>
+                    </td>
+                    <td>{{ invoice.client_name }}</td>
+                    <td>{{ invoice.matter_title }}</td>
+                    <td class="money">${{ "%.2f"|format(invoice.amount) }}</td>
+                    <td>{{ invoice.date_issued }}</td>
+                    <td>
+                        {% if invoice.due_date %}
+                            <span class="{% if invoice.status == 'Unpaid' and invoice.due_date < now().strftime('%Y-%m-%d') %}overdue{% endif %}">
+                                {{ invoice.due_date }}
+                            </span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ invoice.status|lower }}">
+                            {{ invoice.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if invoice.status == 'Unpaid' %}
+                            <button onclick="openModal('pay-modal-{{ invoice.id }}')" class="btn btn-sm btn-primary">Mark Paid</button>
+                            {% endif %}
+                            <a href="{{ url_for('invoice_edit', id=invoice.id) }}" class="btn btn-sm btn-outline">Edit</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No invoices found</p>
+        <a href="{{ url_for('invoice_new') }}" class="btn btn-primary">Create Your First Invoice</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Payment Modals -->
+{% for invoice in invoices %}
+{% if invoice.status == 'Unpaid' %}
+<div id="pay-modal-{{ invoice.id }}" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Mark Invoice #{{ invoice.invoice_number }} as Paid</h3>
+        </div>
+        <form action="{{ url_for('invoice_mark_paid', id=invoice.id) }}" method="post">
+            <div class="form-group">
+                <label class="form-label">Date Received</label>
+                <input type="date" name="date_received" class="form-input" value="{{ now().strftime('%Y-%m-%d') }}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Payment Method</label>
+                <input type="text" name="method" class="form-input" placeholder="e.g., Check, Wire, ACH">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Account</label>
+                <input type="text" name="account" class="form-input" placeholder="e.g., Operating, Trust">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Confirm Payment</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('pay-modal-{{ invoice.id }}')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %}

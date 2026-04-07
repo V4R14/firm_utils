@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Matters - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Matters</h1>
+        <p class="page-subtitle">{{ matters|length }} matters{% if current_status %} with status "{{ current_status }}"{% endif %}</p>
+    </div>
+    <a href="{{ url_for('matter_new') }}" class="btn btn-primary">+ New Matter</a>
+</div>
+
+<!-- Status Filter -->
+<div class="filter-row">
+    <a href="{{ url_for('matters_list') }}" class="filter-btn {% if not current_status %}active{% endif %}">All</a>
+    {% for status in matter_statuses %}
+    <a href="{{ url_for('matters_list', status=status) }}" class="filter-btn {% if current_status == status %}active{% endif %}">
+        {{ status }}
+    </a>
+    {% endfor %}
+</div>
+
+<div class="card">
+    {% if matters|length > 0 %}
+    <div style="margin-bottom: 16px;">
+        <input type="text" class="form-input" id="matterSearch" placeholder="Search matters..." oninput="filterTable(this, 'mattersTable')">
+    </div>
+    <div class="table-container">
+        <table id="mattersTable">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Client</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Deadline</th>
+                    <th>Hourly Rate / Total</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for matter in matters %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('matter_view', id=matter.id) }}" class="table-link">{{ matter.title }}</a>
+                    </td>
+                    <td>{{ matter.client_name }}</td>
+                    <td>{{ matter.matter_type }}</td>
+                    <td>
+                        <span class="status-badge status-{{ matter.status|lower|replace(' ', '-')|replace('/', '-') }}">
+                            {{ matter.status }}
+                        </span>
+                        {% if matter.status in ['Needs Invoicing', 'Awaiting Payment'] %}
+                        <div class="detail-subvalue">Total: {{ matter.total_amount_display }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if matter.deadline %}
+                            <span class="{% if matter.deadline < now().strftime('%Y-%m-%d') and matter.status not in ['Satisfied', 'Inactive/Terminated'] %}overdue{% endif %}">
+                                {{ matter.deadline }}
+                            </span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div>{{ matter.rate_display }}</div>
+                        <div class="detail-subvalue">Total: {{ matter.total_amount_display }}</div>
+                        {% if matter.total_amount_warnings %}
+                        <div class="warning-text">Unparseable: {{ matter.total_amount_warnings|join(', ') }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if matter.status != 'In-Process' and matter.status not in ['Satisfied', 'Inactive/Terminated'] %}
+                            <form action="{{ url_for('matter_regress', id=matter.id) }}" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-outline">← Back</button>
+                            </form>
+                            {% endif %}
+                            {% if matter.status not in ['Satisfied', 'Inactive/Terminated'] %}
+                            <form action="{{ url_for('matter_advance', id=matter.id) }}" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-accent-outline">Advance →</button>
+                            </form>
+                            {% endif %}
+                            <a href="{{ url_for('matter_edit', id=matter.id) }}" class="btn btn-sm btn-outline">Edit</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No matters found</p>
+        <a href="{{ url_for('matter_new') }}" class="btn btn-primary">Create Your First Matter</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterTable(input, tableId) {
+    var filter = input.value.toLowerCase();
+    var rows = document.getElementById(tableId).querySelectorAll('tbody tr');
+    rows.forEach(function(row) {
+        var text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

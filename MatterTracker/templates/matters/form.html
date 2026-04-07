@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if matter %}Edit Matter{% else %}New Matter{% endif %} - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{% if matter %}Edit Matter{% else %}New Matter{% endif %}</h1>
+    </div>
+</div>
+
+<div class="card" style="max-width: 900px;">
+    <form method="post">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="title">Matter Title *</label>
+                <input type="text" id="title" name="title" class="form-input" required
+                       value="{{ matter.title if matter else '' }}"
+                       placeholder="e.g., Contract Review - Acme Acquisition">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="client_id">Client *</label>
+                <select id="client_id" name="client_id" class="form-select" required>
+                    <option value="">Select a client...</option>
+                    {% for client in clients %}
+                    <option value="{{ client.id }}" data-default-rate="{{ client.default_rate }}"
+                            {% if (matter and matter.client_id == client.id) or (selected_client == client.id|string) %}selected{% endif %}>
+                        {{ client.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="matter_type">Matter Type *</label>
+                <select id="matter_type" name="matter_type" class="form-select" required>
+                    {% for type in matter_types %}
+                    <option value="{{ type }}" {% if matter and matter.matter_type == type %}selected{% endif %}>
+                        {{ type }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="status">Status</label>
+                <select id="status" name="status" class="form-select">
+                    {% for status in matter_statuses %}
+                    <option value="{{ status }}" {% if matter and matter.status == status %}selected{% elif not matter and status == 'In-Process' %}selected{% endif %}>
+                        {{ status }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="open_date">Open Date</label>
+                <input type="date" id="open_date" name="open_date" class="form-input"
+                       value="{{ matter.open_date if matter and matter.open_date else '' }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="deadline">Deliverable Deadline</label>
+                <input type="date" id="deadline" name="deadline" class="form-input"
+                       value="{{ matter.deadline if matter and matter.deadline else '' }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="rate">Hourly Rate</label>
+                <input type="number" id="rate" name="rate" class="form-input"
+                       value="{{ matter.rate if matter else '' }}"
+                       placeholder="e.g., 350" step="0.01" min="0"
+                       data-autofill-enabled="{% if matter %}false{% else %}true{% endif %}">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="counterparty">Counterparty</label>
+                <input type="text" id="counterparty" name="counterparty" class="form-input"
+                       value="{{ matter.counterparty if matter else '' }}"
+                       placeholder="e.g., BigCorp Inc.">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="deliverable">Deliverable</label>
+            <input type="text" id="deliverable" name="deliverable" class="form-input"
+                   value="{{ matter.deliverable if matter else '' }}"
+                   placeholder="e.g., Draft contract, Legal opinion, Filing">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="hours_billed_amount">Hours Billed (Total)</label>
+                <input type="number" id="hours_billed_amount" name="hours_billed_amount" class="form-input"
+                       value="{{ matter.hours_billed_amount if matter else '' }}"
+                       placeholder="e.g., 12.5" step="0.01" min="0">
+                <div class="detail-subvalue" style="margin-top: 6px;">Auto-updates from Time Entries if you use them.</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="hours_billed_notes">Hours Billed (Notes)</label>
+                <input type="text" id="hours_billed_notes" name="hours_billed_notes" class="form-input"
+                       value="{{ matter.hours_billed_notes if matter else '' }}"
+                       placeholder="e.g., Drafting + revisions">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="reimbursement_amount">Reimbursement (Amount)</label>
+                <input type="number" id="reimbursement_amount" name="reimbursement_amount" class="form-input"
+                       value="{{ matter.reimbursement_amount if matter else '' }}"
+                       placeholder="e.g., 85.00" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="reimbursement_notes">Reimbursement (Notes)</label>
+                <input type="text" id="reimbursement_notes" name="reimbursement_notes" class="form-input"
+                       value="{{ matter.reimbursement_notes if matter else '' }}"
+                       placeholder="e.g., Filing fee">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="fixed_fee_enabled">Fixed Fee Matter</label>
+                <label class="checkbox-row">
+                    <input type="checkbox" id="fixed_fee_enabled" name="fixed_fee_enabled"
+                           {% if matter and matter.fixed_fee_enabled %}checked{% endif %}>
+                    <span>Use fixed fee instead of hourly calculation</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="fixed_fee_amount">Fixed Fee (Amount)</label>
+                <input type="number" id="fixed_fee_amount" name="fixed_fee_amount" class="form-input"
+                       value="{{ matter.fixed_fee_amount if matter else '' }}"
+                       placeholder="e.g., 5000" step="0.01" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="description">Description</label>
+            <textarea id="description" name="description" class="form-textarea" rows="4"
+                      placeholder="Details about this matter...">{{ matter.description if matter else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="billing_notes">Billing Notes (optional)</label>
+            <textarea id="billing_notes" name="billing_notes" class="form-textarea" rows="4"
+                      placeholder="Billing details, task breakdown, reminders...">{{ matter.billing_notes if matter else '' }}</textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {% if matter %}Update Matter{% else %}Create Matter{% endif %}
+            </button>
+            <a href="{% if matter %}{{ url_for('matter_view', id=matter.id) }}{% else %}{{ url_for('matters_list') }}{% endif %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Overview of matters and invoices</p>
+    </div>
+    <div class="detail-actions">
+        <a href="{{ url_for('matter_new') }}" class="btn btn-primary">+ New Matter</a>
+        <a href="{{ url_for('client_new') }}" class="btn btn-outline">+ New Client</a>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-label">Total Unpaid</div>
+        <div class="stat-value {% if total_unpaid > 0 %}warning{% endif %}">{{ format_money(total_unpaid) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Active Matters</div>
+        <div class="stat-value">{{ matters_by_status['In-Process']|length + matters_by_status['Awaiting Response']|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Needs Invoicing</div>
+        <div class="stat-value">{{ matters_by_status['Needs Invoicing']|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Awaiting Payment</div>
+        <div class="stat-value">{{ invoices_by_status['Unpaid']|length }}</div>
+    </div>
+</div>
+
+<!-- Matters by Status -->
+<h2 style="font-size: 20px; margin-bottom: 20px; color: var(--text-color);">Matters Pipeline</h2>
+
+<div class="dashboard-grid">
+    {% for status in matter_statuses %}
+    {% set matters = matters_by_status[status] %}
+    {% if status in ['In-Process', 'Awaiting Response', 'Needs Invoicing'] %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                {{ status }}
+                <span class="card-count">{{ matters|length }}</span>
+            </h3>
+            {% if status not in ['Satisfied', 'Inactive/Terminated'] %}
+            <a href="{{ url_for('matters_list', status=status) }}" class="btn btn-sm btn-outline">View All</a>
+            {% endif %}
+        </div>
+
+        {% if matters|length > 0 %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Matter</th>
+                        <th>Client</th>
+                        <th>Deadline</th>
+                        {% if status in ['Needs Invoicing', 'Awaiting Payment'] %}
+                        <th>Total</th>
+                        {% endif %}
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for matter in matters[:5] %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('matter_view', id=matter.id) }}" class="table-link">{{ matter.title }}</a>
+                        </td>
+                        <td>{{ matter.client_name }}</td>
+                        <td>
+                            {% if matter.deadline %}
+                                <span class="{% if matter.deadline < now().strftime('%Y-%m-%d') %}overdue{% endif %}">
+                                    {{ matter.deadline }}
+                                </span>
+                            {% else %}
+                                <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
+                        </td>
+                        {% if status in ['Needs Invoicing', 'Awaiting Payment'] %}
+                        <td>
+                            <div class="money">{{ matter.total_amount_display }}</div>
+                            {% if matter.total_amount_warnings %}
+                            <div class="warning-text">Unparseable: {{ matter.total_amount_warnings|join(', ') }}</div>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        <td>
+                            <div class="action-buttons">
+                                {% if status != 'In-Process' and status not in ['Satisfied', 'Inactive/Terminated'] %}
+                                <form action="{{ url_for('matter_regress', id=matter.id) }}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-outline">← Back</button>
+                                </form>
+                                {% endif %}
+                                {% if status not in ['Satisfied', 'Inactive/Terminated'] %}
+                                <form action="{{ url_for('matter_advance', id=matter.id) }}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-accent-outline">Advance →</button>
+                                </form>
+                                {% endif %}
+                                {% if status == 'Needs Invoicing' %}
+                                <a href="{{ url_for('invoice_new', matter_id=matter.id) }}" class="btn btn-sm btn-secondary">Create Invoice</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if matters|length > 5 %}
+        <div style="padding: 12px 20px; color: var(--text-muted); font-size: 13px;">
+            + {{ matters|length - 5 }} more
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <p>No matters in this status</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+
+<!-- Invoices by Status -->
+<h2 style="font-size: 20px; margin: 32px 0 20px; color: var(--text-color);">Invoices</h2>
+
+<div class="dashboard-grid">
+    {% for status in invoice_statuses %}
+    {% set invoices = invoices_by_status[status] %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                {{ status }} Invoices
+                <span class="card-count">{{ invoices|length }}</span>
+            </h3>
+            <a href="{{ url_for('invoices_list', status=status) }}" class="btn btn-sm btn-outline">View All</a>
+        </div>
+
+        {% if invoices|length > 0 %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Client</th>
+                        {% if status == 'Unpaid' %}
+                        <th>Matter</th>
+                        {% endif %}
+                        <th>Amount</th>
+                        <th>Due Date</th>
+                        {% if status == 'Unpaid' %}<th>Actions</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in invoices[:5] %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('invoice_view', id=invoice.id) }}" class="table-link">{{ invoice.invoice_number }}</a>
+                        </td>
+                        <td>{{ invoice.client_name }}</td>
+                        {% if status == 'Unpaid' %}
+                        <td>{{ invoice.matter_title }}</td>
+                        {% endif %}
+                        <td class="money">${{ "%.2f"|format(invoice.amount) }}</td>
+                        <td>
+                            {% if invoice.due_date %}
+                                <span class="{% if status == 'Unpaid' and invoice.due_date < now().strftime('%Y-%m-%d') %}overdue{% endif %}">
+                                    {{ invoice.due_date }}
+                                </span>
+                            {% else %}
+                                <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
+                        </td>
+                        {% if status == 'Unpaid' %}
+                        <td>
+                            <button onclick="openModal('pay-modal-{{ invoice.id }}')" class="btn btn-sm btn-primary">Mark Paid</button>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if invoices|length > 5 %}
+        <div style="padding: 12px 20px; color: var(--text-muted); font-size: 13px;">
+            + {{ invoices|length - 5 }} more
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <p>No {{ status|lower }} invoices</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Payment Modals -->
+{% for invoice in invoices_by_status['Unpaid'] %}
+<div id="pay-modal-{{ invoice.id }}" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Mark Invoice #{{ invoice.invoice_number }} as Paid</h3>
+        </div>
+        <form action="{{ url_for('invoice_mark_paid', id=invoice.id) }}" method="post">
+            <div class="form-group">
+                <label class="form-label">Date Received</label>
+                <input type="date" name="date_received" class="form-input" value="{{ now().strftime('%Y-%m-%d') }}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Payment Method</label>
+                <input type="text" name="method" class="form-input" placeholder="e.g., Check, Wire, ACH">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Account</label>
+                <input type="text" name="account" class="form-input" placeholder="e.g., Operating, Trust">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Confirm Payment</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('pay-modal-{{ invoice.id }}')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add now() function for template
+window.now = function() {
+    return new Date().toISOString().split('T')[0];
+};
+</script>
+{% endblock %}

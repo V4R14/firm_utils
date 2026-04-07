@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if client %}Edit Client{% else %}New Client{% endif %} - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{% if client %}Edit Client{% else %}New Client{% endif %}</h1>
+    </div>
+</div>
+
+<div class="card" style="max-width: 800px;">
+    <form method="post">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="name">Client Name *</label>
+                <input type="text" id="name" name="name" class="form-input" required
+                       value="{{ client.name if client else '' }}"
+                       placeholder="e.g., Acme Corporation">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="contact_name">Contact Name</label>
+                <input type="text" id="contact_name" name="contact_name" class="form-input"
+                       value="{{ client.contact_name if client else '' }}"
+                       placeholder="e.g., John Smith">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="contact_email">Contact Email</label>
+                <input type="email" id="contact_email" name="contact_email" class="form-input"
+                       value="{{ client.contact_email if client else '' }}"
+                       placeholder="e.g., john@acme.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="default_rate">Default Rate</label>
+                <input type="text" id="default_rate" name="default_rate" class="form-input"
+                       value="{{ client.default_rate if client else '' }}"
+                       placeholder="e.g., $350/hr or $5,000 flat">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="client_directory">Client Directory</label>
+            <div class="input-with-button">
+                <input type="text" id="client_directory" name="client_directory" class="form-input"
+                       value="{{ (client.client_directory or '') if client else '' }}"
+                       placeholder="Relative to Firm Directory (optional)">
+                <button type="button" class="btn btn-outline btn-sm" id="client-directory-browse"
+                        data-firm-directory="{{ firm_directory }}"
+                        {% if not firm_directory %}disabled{% endif %}>
+                    Browse
+                </button>
+            </div>
+            <p class="settings-description">
+                Leave blank to use the Firm Directory. You can also enter a relative subfolder path.
+            </p>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="address">Address</label>
+            <textarea id="address" name="address" class="form-textarea" rows="3"
+                      placeholder="Street address, city, state, zip">{{ client.address if client else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="notes">Notes</label>
+            <textarea id="notes" name="notes" class="form-textarea" rows="4"
+                      placeholder="Any additional notes about this client...">{{ client.notes if client else '' }}</textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {% if client %}Update Client{% else %}Create Client{% endif %}
+            </button>
+            <a href="{% if client %}{{ url_for('client_view', id=client.id) }}{% else %}{{ url_for('clients_list') }}{% endif %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<div id="client-dir-modal" class="modal-backdrop" data-firm-directory="{{ firm_directory }}">
+    <div class="modal modal-wide">
+        <div class="modal-header">
+            <h3 class="modal-title">Select Client Folder</h3>
+        </div>
+        <div class="modal-body">
+            <div class="folder-path">
+                <span id="client-dir-current">—</span>
+            </div>
+            <div class="folder-list" id="client-dir-list"></div>
+        </div>
+        <div class="form-actions">
+            <button type="button" class="btn btn-outline btn-sm" id="client-dir-back">Up</button>
+            <div class="form-actions-right">
+                <input type="file" id="client-dir-native" class="visually-hidden" webkitdirectory directory multiple>
+                <button type="button" class="btn btn-outline btn-sm" id="client-dir-native-button">System Picker</button>
+                <button type="button" class="btn btn-outline btn-sm" id="client-dir-cancel">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" id="client-dir-select">Select Folder</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

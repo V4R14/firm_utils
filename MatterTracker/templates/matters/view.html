@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ matter.title }} - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{{ matter.title }}</h1>
+        <div class="detail-meta">
+            <span>Client: <a href="{{ url_for('client_view', id=matter.client_id) }}" class="table-link">{{ matter.client_name }}</a></span>
+            <span>Type: {{ matter.matter_type }}</span>
+        </div>
+    </div>
+    <div class="detail-actions">
+        {% if matter.status == 'Needs Invoicing' %}
+        <a href="{{ url_for('invoice_new', matter_id=matter.id) }}" class="btn btn-primary">+ Create Invoice</a>
+        {% endif %}
+        <a href="{{ url_for('matter_edit', id=matter.id) }}" class="btn btn-secondary">Edit</a>
+        <form action="{{ url_for('matter_delete', id=matter.id) }}" method="post" class="delete-form" style="display: inline;">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+    </div>
+</div>
+
+<!-- Progress Bar -->
+<div class="card">
+    <div class="progress-container">
+        <div class="progress-steps">
+            {% for i in range(5) %}
+            {% set step_status = matter_statuses[i] %}
+            <div class="progress-step {% if i < status_index %}completed{% elif i == status_index %}current{% endif %}">
+                <div class="progress-dot">
+                    {% if i < status_index %}✓{% else %}{{ i + 1 }}{% endif %}
+                </div>
+                <div class="progress-label">{{ step_status }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 12px; justify-content: center; margin-top: 20px;">
+        {% if matter.status != 'In-Process' and matter.status not in ['Satisfied', 'Inactive/Terminated'] %}
+        <form action="{{ url_for('matter_regress', id=matter.id) }}" method="post" style="display: inline;">
+            <button type="submit" class="btn btn-outline">← Back to Previous Stage</button>
+        </form>
+        {% endif %}
+
+        {% if matter.status not in ['Satisfied', 'Inactive/Terminated'] %}
+        <form action="{{ url_for('matter_advance', id=matter.id) }}" method="post" style="display: inline;">
+            <button type="submit" class="btn btn-accent-outline">Advance to Next Stage →</button>
+        </form>
+        {% endif %}
+
+        <form action="{{ url_for('matter_set_status', id=matter.id) }}" method="post" class="quick-action">
+            <select name="status" class="form-select" style="width: auto;" data-original="{{ matter.status }}">
+                <option value="">Set status...</option>
+                {% for status in matter_statuses %}
+                <option value="{{ status }}">{{ status }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline">Set</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="detail-label">Status</div>
+            <div class="detail-value">
+                <span class="status-badge status-{{ matter.status|lower|replace(' ', '-')|replace('/', '-') }}">
+                    {{ matter.status }}
+                </span>
+                {% if matter.status in ['Needs Invoicing', 'Awaiting Payment'] %}
+                <div class="detail-subvalue">Total: {{ matter.total_amount_display }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Open Date</div>
+            <div class="detail-value">{{ matter.open_date or '—' }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Deadline</div>
+            <div class="detail-value">
+                {% if matter.deadline %}
+                    <span class="{% if matter.deadline < now().strftime('%Y-%m-%d') and matter.status not in ['Satisfied', 'Inactive/Terminated'] %}overdue{% endif %}">
+                        {{ matter.deadline }}
+                    </span>
+                {% else %}
+                    —
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Hourly Rate</div>
+            <div class="detail-value">{{ matter.rate_display }}</div>
+            <div class="detail-subvalue">Total: {{ matter.total_amount_display }}</div>
+            {% if matter.total_amount_warnings %}
+            <div class="warning-text">Unparseable: {{ matter.total_amount_warnings|join(', ') }}</div>
+            {% endif %}
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Hours Billed</div>
+            <div class="detail-value">{{ matter.hours_billed_display }}</div>
+            {% if matter.hours_billed_notes and matter.hours_billed_notes != 'None' %}
+            <div class="detail-subvalue">{{ matter.hours_billed_notes }}</div>
+            {% endif %}
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Reimbursement</div>
+            <div class="detail-value">{{ matter.reimbursement_display }}</div>
+            {% if matter.reimbursement_notes and matter.reimbursement_notes != 'None' %}
+            <div class="detail-subvalue">{{ matter.reimbursement_notes }}</div>
+            {% endif %}
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Fixed Fee</div>
+            <div class="detail-value">
+                {% if matter.fixed_fee_enabled %}
+                    {{ matter.fixed_fee_display }}
+                {% else %}
+                    —
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Counterparty</div>
+            <div class="detail-value">{{ matter.counterparty or '—' }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Deliverable</div>
+            <div class="detail-value">{{ matter.deliverable or '—' }}</div>
+        </div>
+    </div>
+
+    {% if matter.description %}
+    <div class="detail-item" style="margin-top: 20px;">
+        <div class="detail-label">Description</div>
+        <div class="detail-value" style="white-space: pre-line;">{{ matter.description }}</div>
+    </div>
+    {% endif %}
+
+    {% if matter.billing_notes %}
+    <div class="detail-item" style="margin-top: 20px;">
+        <div class="detail-label">Billing Notes</div>
+        <div class="detail-value" style="white-space: pre-line;">{{ matter.billing_notes }}</div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Time Entries -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            Time Entries
+            <span class="card-count">{{ time_entries|length }}</span>
+        </h3>
+        <div class="detail-meta" style="gap: 16px;">
+            <span>Total: {{ format_number(billable_hours_total) }} hrs</span>
+        </div>
+        <button onclick="openModal('time-new-modal')" class="btn btn-sm btn-primary">+ Add Entry</button>
+    </div>
+
+    {% if time_entries|length > 0 %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Hours</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in time_entries %}
+                <tr>
+                    <td>{{ entry.entry_date or '—' }}</td>
+                    <td class="money">{{ format_number(entry.hours) }}</td>
+                    <td style="white-space: pre-line;">{{ entry.description or '—' }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button onclick="openModal('time-edit-modal-{{ entry.id }}')" class="btn btn-sm btn-outline">Edit</button>
+                            <form action="{{ url_for('time_entry_delete', entry_id=entry.id) }}" method="post" class="delete-form" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No time entries yet</p>
+        <p style="font-size: 13px; margin-top: 8px; color: var(--text-muted);">Add an entry to automatically update the matter’s total hours.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Invoices for this Matter -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            Invoices
+            <span class="card-count">{{ invoices|length }}</span>
+        </h3>
+        <a href="{{ url_for('invoice_new', matter_id=matter.id) }}" class="btn btn-sm btn-primary">+ New Invoice</a>
+    </div>
+
+    {% if invoices|length > 0 %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Invoice #</th>
+                    <th>Amount</th>
+                    <th>Date Issued</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('invoice_view', id=invoice.id) }}" class="table-link">{{ invoice.invoice_number }}</a>
+                    </td>
+                    <td class="money">${{ "%.2f"|format(invoice.amount) }}</td>
+                    <td>{{ invoice.date_issued }}</td>
+                    <td>{{ invoice.due_date or '—' }}</td>
+                    <td>
+                        <span class="status-badge status-{{ invoice.status|lower }}">
+                            {{ invoice.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if invoice.status == 'Unpaid' %}
+                            <button onclick="openModal('pay-modal-{{ invoice.id }}')" class="btn btn-sm btn-primary">Mark Paid</button>
+                            {% endif %}
+                            <a href="{{ url_for('invoice_edit', id=invoice.id) }}" class="btn btn-sm btn-outline">Edit</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No invoices for this matter yet</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Time Entry Modals -->
+<div id="time-new-modal" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Add Time Entry</h3>
+        </div>
+        <form action="{{ url_for('time_entry_new', id=matter.id) }}" method="post">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Hours *</label>
+                    <input type="number" name="hours" class="form-input" step="0.01" min="0.01" required placeholder="e.g., 1.5">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date (optional)</label>
+                    <input type="date" name="entry_date" class="form-input" value="">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description (optional)</label>
+                <textarea name="description" class="form-textarea" rows="3" placeholder="What did you do?"></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Add Entry</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('time-new-modal')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% for entry in time_entries %}
+<div id="time-edit-modal-{{ entry.id }}" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Edit Time Entry</h3>
+        </div>
+        <form action="{{ url_for('time_entry_edit', entry_id=entry.id) }}" method="post">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Hours *</label>
+                    <input type="number" name="hours" class="form-input" step="0.01" min="0.01" required value="{{ entry.hours }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date (optional)</label>
+                    <input type="date" name="entry_date" class="form-input" value="{{ entry.entry_date or '' }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description (optional)</label>
+                <textarea name="description" class="form-textarea" rows="3" placeholder="What did you do?">{{ entry.description or '' }}</textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('time-edit-modal-{{ entry.id }}')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Payment Modals -->
+{% for invoice in invoices %}
+{% if invoice.status == 'Unpaid' %}
+<div id="pay-modal-{{ invoice.id }}" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Mark Invoice #{{ invoice.invoice_number }} as Paid</h3>
+        </div>
+        <form action="{{ url_for('invoice_mark_paid', id=invoice.id) }}" method="post">
+            <div class="form-group">
+                <label class="form-label">Date Received</label>
+                <input type="date" name="date_received" class="form-input" value="{{ now().strftime('%Y-%m-%d') }}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Payment Method</label>
+                <input type="text" name="method" class="form-input" placeholder="e.g., Check, Wire, ACH">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Account</label>
+                <input type="text" name="account" class="form-input" placeholder="e.g., Operating, Trust">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Confirm Payment</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('pay-modal-{{ invoice.id }}')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %}

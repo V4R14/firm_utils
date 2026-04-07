@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Settings</h1>
+        <p class="page-subtitle">Configure your Matter Tracker</p>
+    </div>
+</div>
+
+<div class="card" style="max-width: 700px;">
+    <form method="post">
+        <div class="settings-section">
+            <div class="form-group">
+                <label class="form-label" for="firm_directory">Firm Directory</label>
+                <input type="text" id="firm_directory" name="firm_directory" class="form-input"
+                       value="{{ settings.firm_directory }}"
+                       placeholder="C:\Users\YourName\Firm\Documents">
+                <p class="settings-description">
+                    The root folder containing your firm's documents. This is used for file search.
+                    <br>Example: <code style="color: var(--accent);">C:\Users\Erich\OneDrive\Varia Law</code>
+                </p>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <label class="form-label">Theme</label>
+            <div class="theme-options">
+                <label class="theme-option {% if settings.theme == 'varia' %}active{% endif %}">
+                    <input type="radio" name="theme" value="varia" {% if settings.theme == 'varia' %}checked{% endif %}>
+                    <span>Varia</span>
+                </label>
+                <label class="theme-option {% if settings.theme == 'greyscale' %}active{% endif %}">
+                    <input type="radio" name="theme" value="greyscale" {% if settings.theme == 'greyscale' %}checked{% endif %}>
+                    <span>Greyscale</span>
+                </label>
+                <label class="theme-option {% if settings.theme == 'retrofuturist' %}active{% endif %}">
+                    <input type="radio" name="theme" value="retrofuturist" {% if settings.theme == 'retrofuturist' %}checked{% endif %}>
+                    <span>Retrofuturist</span>
+                </label>
+                <label class="theme-option {% if settings.theme == 'paper' %}active{% endif %}">
+                    <input type="radio" name="theme" value="paper" {% if settings.theme == 'paper' %}checked{% endif %}>
+                    <span>Paper</span>
+                </label>
+            </div>
+            <p class="settings-description">Choose a color theme for the interface.</p>
+        </div>
+
+        <div class="settings-section">
+            <label class="form-label">Font</label>
+            <div class="font-options">
+                <label class="font-option {% if settings.font == 'system' %}active{% endif %}">
+                    <input type="radio" name="font" value="system" {% if settings.font == 'system' %}checked{% endif %}>
+                    <span>System</span>
+                </label>
+                <label class="font-option {% if settings.font == 'inter' %}active{% endif %}">
+                    <input type="radio" name="font" value="inter" {% if settings.font == 'inter' %}checked{% endif %}>
+                    <span>Inter</span>
+                </label>
+                <label class="font-option {% if settings.font == 'playfair' %}active{% endif %}">
+                    <input type="radio" name="font" value="playfair" {% if settings.font == 'playfair' %}checked{% endif %}>
+                    <span>Playfair Display</span>
+                </label>
+                <label class="font-option {% if settings.font == 'jetbrains-mono' %}active{% endif %}">
+                    <input type="radio" name="font" value="jetbrains-mono" {% if settings.font == 'jetbrains-mono' %}checked{% endif %}>
+                    <span>JetBrains Mono</span>
+                </label>
+            </div>
+            <p class="settings-description">Choose a font. Run <code>python download_fonts.py</code> once for offline font support.</p>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="max-width: 700px;">
+    <h3 style="font-size: 16px; margin-bottom: 16px;">Data Storage</h3>
+    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 12px;">
+        Your data is stored locally in a portable SQLite database file.
+    </p>
+    <div style="background: var(--input-bg); padding: 12px 16px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 13px; color: var(--accent);">
+        matter_tracker.db
+    </div>
+    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 12px;">
+        Your settings are stored in a JSON file.
+    </p>
+    <div style="background: var(--input-bg); padding: 12px 16px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 13px; color: var(--accent);">
+        settings.json
+    </div>
+    <div style="margin-top: 10px; font-size: 13px; color: var(--text-muted);">
+        Location:
+        <span style="font-family: 'Consolas', monospace; color: var(--text-color);">{{ db_path }}</span>
+        <span style="margin-left: 10px;">
+            <a href="#" class="table-link open-data-folder">Open folder</a>
+        </span>
+    </div>
+    <p style="color: var(--text-muted); font-size: 13px; margin-top: 12px;">
+        To back up your data and settings, simply copy these files (database and settings) to a safe location. You can also move the entire MatterTracker folder to another computer.
+    </p>
+</div>
+
+<div class="card" style="max-width: 700px;">
+    <h3 style="font-size: 16px; margin-bottom: 16px;">About</h3>
+    <p style="color: var(--text-muted); font-size: 14px;">
+        <strong style="color: var(--text-color);">Varia Law - Matter Tracker</strong><br>
+        A fully offline, local application for tracking clients, matters, invoices, and payments.
+    </p>
+    <p style="color: var(--text-muted); font-size: 13px; margin-top: 12px;">
+        This application runs entirely on your local machine and does not connect to the internet. Your data never leaves your computer.
+    </p>
+</div>
+{% endblock %}

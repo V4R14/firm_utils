@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Client Financial Summary - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Client Financial Summary</h1>
+        <p class="page-subtitle">WIP, needs invoicing, and invoices by client</p>
+    </div>
+    <div class="detail-actions">
+        <a href="{{ url_for('report_clients', format='csv') }}" class="btn btn-outline">Export CSV</a>
+        <button class="btn btn-primary" onclick="window.print()">Print</button>
+    </div>
+</div>
+
+<div class="card">
+    {% if clients|length > 0 %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>Active Matters</th>
+                    <th>WIP (est.)</th>
+                    <th>Needs Invoicing</th>
+                    <th>Unpaid</th>
+                    <th>Paid</th>
+                    <th>Total Invoiced</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in clients %}
+                <tr>
+                    <td><a class="table-link" href="{{ url_for('client_view', id=c.client_id) }}">{{ c.client_name }}</a></td>
+                    <td>{{ c.active_matters }}</td>
+                    <td class="money">{{ c.wip_total_display }}</td>
+                    <td class="money">{{ c.needs_invoicing_total_display }}</td>
+                    <td class="money">{{ c.unpaid_total_display }}</td>
+                    <td class="money">{{ c.paid_total_display }}</td>
+                    <td class="money">{{ c.total_invoiced_display }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No clients found</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

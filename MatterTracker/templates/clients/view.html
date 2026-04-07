@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ client.name }} - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{{ client.name }}</h1>
+        <p class="page-subtitle">Client Details</p>
+    </div>
+    <div class="detail-actions">
+        <a href="{{ url_for('matter_new', client_id=client.id) }}" class="btn btn-primary">+ New Matter</a>
+        <a href="{{ url_for('client_edit', id=client.id) }}" class="btn btn-secondary">Edit</a>
+        <form action="{{ url_for('client_delete', id=client.id) }}" method="post" class="delete-form" style="display: inline;">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="detail-label">Contact Name</div>
+            <div class="detail-value">
+                {% if client.contact_name %}
+                <div class="inline-copy">
+                    <span>{{ client.contact_name }}</span>
+                    <button type="button" class="copy-btn" data-copy="{{ client.contact_name }}">Copy</button>
+                </div>
+                {% else %}
+                —
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Contact Email</div>
+            <div class="detail-value">
+                {% if client.contact_email %}
+                <div class="inline-copy">
+                    <span>{{ client.contact_email }}</span>
+                    <button type="button" class="copy-btn" data-copy="{{ client.contact_email }}">Copy</button>
+                </div>
+                {% else %}
+                —
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Default Rate</div>
+            <div class="detail-value">{{ client.default_rate or '—' }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Created</div>
+            <div class="detail-value">{{ client.created_at[:10] if client.created_at else '—' }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Client Directory</div>
+            <div class="detail-value">
+                {% if client.client_directory %}
+                <div class="inline-copy">
+                    <span>{{ client.client_directory }}</span>
+                    <button type="button" class="copy-btn" data-copy="{{ client.client_directory }}">Copy</button>
+                </div>
+                {% else %}
+                —
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if client.address %}
+    <div class="detail-item" style="margin-top: 16px;">
+        <div class="detail-label">Address</div>
+        <div class="detail-value" style="white-space: pre-line;">{{ client.address }}</div>
+    </div>
+    {% endif %}
+
+    {% if client.notes %}
+    <div class="detail-item" style="margin-top: 16px;">
+        <div class="detail-label">Notes</div>
+        <div class="detail-value" style="white-space: pre-line;">{{ client.notes }}</div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            Matters
+            <span class="card-count">{{ matters|length }}</span>
+        </h3>
+        <a href="{{ url_for('matter_new', client_id=client.id) }}" class="btn btn-sm btn-primary">+ New Matter</a>
+    </div>
+
+    {% if matters|length > 0 %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Deadline</th>
+                    <th>Hourly Rate / Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for matter in matters %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('matter_view', id=matter.id) }}" class="table-link">{{ matter.title }}</a>
+                    </td>
+                    <td>{{ matter.matter_type }}</td>
+                    <td>
+                        <span class="status-badge status-{{ matter.status|lower|replace(' ', '-')|replace('/', '-') }}">
+                            {{ matter.status }}
+                        </span>
+                        {% if matter.status in ['Needs Invoicing', 'Awaiting Payment'] %}
+                        <div class="detail-subvalue">Total: {{ matter.total_amount_display }}</div>
+                        {% endif %}
+                    </td>
+                    <td>{{ matter.deadline or '—' }}</td>
+                    <td>
+                        <div>{{ matter.rate_display }}</div>
+                        <div class="detail-subvalue">Total: {{ matter.total_amount_display }}</div>
+                        {% if matter.total_amount_warnings %}
+                        <div class="warning-text">Unparseable: {{ matter.total_amount_warnings|join(', ') }}</div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No matters for this client yet</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if invoice %}Edit Invoice{% else %}New Invoice{% endif %} - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{% if invoice %}Edit Invoice{% else %}New Invoice{% endif %}</h1>
+    </div>
+</div>
+
+<div class="card" style="max-width: 800px;">
+    <form method="post">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="invoice_number">Invoice Number *</label>
+                <input type="text" id="invoice_number" name="invoice_number" class="form-input" required
+                       value="{{ invoice.invoice_number if invoice else default_invoice_number }}"
+                       placeholder="e.g., Invoice No. 2026.2">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="matter_id">Matter *</label>
+                <select id="matter_id" name="matter_id" class="form-select" required>
+                    <option value="">Select a matter...</option>
+                    {% for matter in matters %}
+                    <option value="{{ matter.id }}" {% if (invoice and invoice.matter_id == matter.id) or (selected_matter == matter.id|string) %}selected{% endif %}>
+                        {{ matter.client_name }} - {{ matter.title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="amount">Amount *</label>
+                <input type="number" id="amount" name="amount" class="form-input" required step="0.01" min="0"
+                       value="{{ invoice.amount if invoice else prefill_amount }}"
+                       placeholder="0.00" data-currency>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="date_issued">Date Issued *</label>
+                <input type="date" id="date_issued" name="date_issued" class="form-input" required
+                       value="{{ invoice.date_issued if invoice else today }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="due_date">Due Date</label>
+            <input type="date" id="due_date" name="due_date" class="form-input"
+                   value="{{ invoice.due_date if invoice and invoice.due_date else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="description">Description (optional)</label>
+            <textarea id="description" name="description" class="form-textarea" rows="3"
+                      placeholder="Brief description of services billed...">{{ invoice.description if invoice else '' }}</textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {% if invoice %}Update Invoice{% else %}Create Invoice{% endif %}
+            </button>
+            <a href="{% if invoice %}{{ url_for('invoice_view', id=invoice.id) }}{% else %}{{ url_for('invoices_list') }}{% endif %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

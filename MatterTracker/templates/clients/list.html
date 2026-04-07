@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Clients - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Clients</h1>
+        <p class="page-subtitle">{{ clients|length }} total clients</p>
+    </div>
+    <a href="{{ url_for('client_new') }}" class="btn btn-primary">+ New Client</a>
+</div>
+
+<div class="card">
+    {% if clients|length > 0 %}
+    <div style="margin-bottom: 16px;">
+        <input type="text" class="form-input" id="clientSearch" placeholder="Search clients..." oninput="filterTable(this, 'clientsTable')">
+    </div>
+    <div class="table-container">
+        <table id="clientsTable">
+            <thead>
+                <tr>
+                    <th>Client Name</th>
+                    <th>Contact</th>
+                    <th>Email</th>
+                    <th>Rate</th>
+                    <th>Active Matters</th>
+                    <th>Total Matters</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in clients %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('client_view', id=client.id) }}" class="table-link">{{ client.name }}</a>
+                    </td>
+                    <td>
+                        {% if client.contact_name %}
+                        <div class="inline-copy">
+                            <span>{{ client.contact_name }}</span>
+                            <button type="button" class="copy-btn" data-copy="{{ client.contact_name }}">Copy</button>
+                        </div>
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if client.contact_email %}
+                        <div class="inline-copy">
+                            <span>{{ client.contact_email }}</span>
+                            <button type="button" class="copy-btn" data-copy="{{ client.contact_email }}">Copy</button>
+                        </div>
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                    <td>{{ client.default_rate or '—' }}</td>
+                    <td>{{ client.active_matter_count }}</td>
+                    <td>{{ client.matter_count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No clients yet</p>
+        <a href="{{ url_for('client_new') }}" class="btn btn-primary">Add Your First Client</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterTable(input, tableId) {
+    var filter = input.value.toLowerCase();
+    var rows = document.getElementById(tableId).querySelectorAll('tbody tr');
+    rows.forEach(function(row) {
+        var text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}
