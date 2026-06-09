@@ -583,8 +583,18 @@ def dashboard():
         ''', (status,)).fetchall()
         invoices_by_status[status] = invoices
 
-    # Calculate totals
+    # Calculate totals. Start from all unpaid invoice amounts, then add the
+    # totals of Awaiting Payment matters that have NO unpaid invoice, so a
+    # matter appearing in both sections is not counted twice.
     total_unpaid = db.execute('SELECT COALESCE(SUM(amount), 0) as total FROM invoices WHERE status = ?', ('Unpaid',)).fetchone()['total']
+
+    for matter in matters_by_status['Awaiting Payment']:
+        unpaid_invoice_count = db.execute(
+            'SELECT COUNT(*) as count FROM invoices WHERE matter_id = ? AND status = ?',
+            (matter['id'], 'Unpaid')
+        ).fetchone()['count']
+        if unpaid_invoice_count == 0:
+            total_unpaid += matter['total_amount']
 
     return render_template('dashboard.html',
                          matters_by_status=matters_by_status,
@@ -1281,6 +1291,35 @@ def invoice_mark_paid(id):
 
     db.commit()
     return redirect(request.referrer or url_for('invoice_view', id=id))
+
+
+@app.route('/matters/<int:id>/mark-paid', methods=['POST'])
+def matter_mark_paid(id):
+    """Mark an Awaiting Payment matter as paid: pay any unpaid invoices and advance to Satisfied."""
+    db = get_db()
+    matter = db.execute('SELECT * FROM matters WHERE id = ?', (id,)).fetchone()
+    if not matter:
+        flash('Matter not found.', 'error')
+        return redirect(url_for('matters_list'))
+
+    date_received = request.form.get('date_received', date.today().isoformat())
+    method = request.form.get('method', '')
+    account = request.form.get('account', '')
+
+    # Mark any unpaid invoices for this matter as paid, recording a payment for
+    # each so the Unpaid Invoices section stays in sync.
+    unpaid_invoices = db.execute('SELECT * FROM invoices WHERE matter_id = ? AND status = ?', (id, 'Unpaid')).fetchall()
+    for inv in unpaid_invoices:
+        db.execute('''
+            INSERT INTO payments (invoice_id, amount, date_received, method, account)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (inv['id'], inv['amount'], date_received, method, account))
+        db.execute('UPDATE invoices SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', ('Paid', inv['id']))
+
+    db.execute('UPDATE matters SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', ('Satisfied', id))
+    db.commit()
+    flash('Matter marked as paid. Matter advanced to Satisfied.', 'success')
+    return redirect(request.referrer or url_for('dashboard'))
 
 
 @app.route('/invoices/<int:id>/delete', methods=['POST'])
