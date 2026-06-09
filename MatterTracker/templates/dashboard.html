@@ -40,7 +40,7 @@
 <div class="dashboard-grid">
     {% for status in matter_statuses %}
     {% set matters = matters_by_status[status] %}
-    {% if status in ['In-Process', 'Awaiting Response', 'Needs Invoicing'] %}
+    {% if status in ['In-Process', 'Awaiting Response', 'Needs Invoicing', 'Awaiting Payment'] %}
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">
@@ -92,6 +92,13 @@
                         {% endif %}
                         <td>
                             <div class="action-buttons">
+                                {% if status == 'Awaiting Payment' %}
+                                <form action="{{ url_for('matter_regress', id=matter.id) }}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-outline">← Back</button>
+                                </form>
+                                <a href="{{ url_for('matter_edit', id=matter.id) }}" class="btn btn-sm btn-outline">Edit</a>
+                                <button onclick="openModal('matter-pay-modal-{{ matter.id }}')" class="btn btn-sm btn-primary">Mark Paid</button>
+                                {% else %}
                                 {% if status != 'In-Process' and status not in ['Satisfied', 'Inactive/Terminated'] %}
                                 <form action="{{ url_for('matter_regress', id=matter.id) }}" method="post" style="display: inline;">
                                     <button type="submit" class="btn btn-sm btn-outline">← Back</button>
@@ -104,6 +111,7 @@
                                 {% endif %}
                                 {% if status == 'Needs Invoicing' %}
                                 <a href="{{ url_for('invoice_new', matter_id=matter.id) }}" class="btn btn-sm btn-secondary">Create Invoice</a>
+                                {% endif %}
                                 {% endif %}
                             </div>
                         </td>
@@ -224,6 +232,35 @@
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Confirm Payment</button>
                 <button type="button" class="btn btn-outline" onclick="closeModal('pay-modal-{{ invoice.id }}')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Awaiting Payment Matter Modals -->
+{% for matter in matters_by_status['Awaiting Payment'] %}
+<div id="matter-pay-modal-{{ matter.id }}" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Mark "{{ matter.title }}" as Paid</h3>
+        </div>
+        <form action="{{ url_for('matter_mark_paid', id=matter.id) }}" method="post">
+            <div class="form-group">
+                <label class="form-label">Date Received</label>
+                <input type="date" name="date_received" class="form-input" value="{{ now().strftime('%Y-%m-%d') }}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Payment Method</label>
+                <input type="text" name="method" class="form-input" placeholder="e.g., Check, Wire, ACH">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Account</label>
+                <input type="text" name="account" class="form-input" placeholder="e.g., Operating, Trust">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Confirm Payment</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('matter-pay-modal-{{ matter.id }}')">Cancel</button>
             </div>
         </form>
     </div>
