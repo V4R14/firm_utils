@@ -13,6 +13,7 @@ from io import StringIO
 from datetime import datetime, date, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, g, Response, send_from_directory
 from pathlib import Path
+from retainers import init_retainer_db, retainers_bp
 
 # File search imports
 import zipfile
@@ -528,6 +529,8 @@ def save_settings(settings):
 
 # Initialize database on startup
 init_db()
+init_retainer_db(DATABASE)
+app.register_blueprint(retainers_bp)
 
 
 @app.context_processor
