@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/themes.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/retainers.css') }}">
 </head>
 <body data-theme="{{ theme }}" data-font="{{ font }}">
     <div class="app-container">
@@ -64,6 +65,19 @@
                         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                     </svg>
                     <span>Payments</span>
+                </a>
+
+                <a href="{{ url_for('retainers.list_retainers') }}" class="nav-item {% if request.blueprint == 'retainers' %}active{% endif %}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 10h18"/>
+                        <path d="M5 10v8"/>
+                        <path d="M9 10v8"/>
+                        <path d="M15 10v8"/>
+                        <path d="M19 10v8"/>
+                        <path d="M2 18h20"/>
+                        <path d="M12 3 2 8h20L12 3z"/>
+                    </svg>
+                    <span>Retainers</span>
                 </a>
 
                 <div class="nav-divider"></div>

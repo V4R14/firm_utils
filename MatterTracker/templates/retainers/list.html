@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Retainers - Varia Law{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Retainers</h1>
+        <p class="page-subtitle">Track client funds, contributions, and deductions</p>
+    </div>
+    {% if available_clients %}
+    <button type="button" class="btn btn-primary" onclick="openModal('retainer-new-modal')">+ Set Up Retainer</button>
+    {% endif %}
+</div>
+
+<div class="retainer-summary-grid">
+    <div class="card retainer-summary-card">
+        <span class="retainer-summary-label">Total Retainer Funds</span>
+        <strong class="retainer-summary-value money">{{ format_money(total_held) }}</strong>
+    </div>
+    <div class="card retainer-summary-card">
+        <span class="retainer-summary-label">Client Retainers</span>
+        <strong class="retainer-summary-value">{{ retainers|length }}</strong>
+    </div>
+</div>
+
+{% if retainers %}
+<div class="retainer-list">
+    {% for retainer in retainers %}
+    <details class="card retainer-card" id="retainer-{{ retainer.id }}">
+        <summary class="retainer-card-summary">
+            <span class="retainer-disclosure" aria-hidden="true"></span>
+            <span class="retainer-client">
+                <strong>{{ retainer.client_name }}</strong>
+                <span>{{ retainer.account }}</span>
+            </span>
+            <span class="retainer-activity">
+                {{ retainer.transaction_count }} transaction{% if retainer.transaction_count != 1 %}s{% endif %}
+                {% if retainer.last_activity %} · Last activity {{ retainer.last_activity }}{% endif %}
+            </span>
+            <span class="retainer-balance">
+                <small>Remaining</small>
+                <strong class="money {% if retainer.balance > 0 %}money-positive{% endif %}">{{ format_money(retainer.balance) }}</strong>
+            </span>
+        </summary>
+
+        <div class="retainer-card-body">
+            <div class="retainer-toolbar">
+                <form action="{{ url_for('retainers.update_account', retainer_id=retainer.id) }}" method="post" class="retainer-account-form">
+                    <div class="form-group">
+                        <label class="form-label" for="account-{{ retainer.id }}">Account where retainer is held</label>
+                        <div class="input-with-button">
+                            <input id="account-{{ retainer.id }}" type="text" name="account" class="form-input" value="{{ retainer.account }}" required>
+                            <button type="submit" class="btn btn-outline">Save</button>
+                        </div>
+                    </div>
+                </form>
+                <button type="button" class="btn btn-primary" onclick="openModal('retainer-transaction-modal-{{ retainer.id }}')">+ Add Transaction</button>
+            </div>
+
+            {% set transactions = transactions_by_retainer.get(retainer.id, []) %}
+            {% if transactions %}
+            <div class="table-container">
+                <table class="retainer-history-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Note / Invoice</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.transaction_date }}</td>
+                            <td><span class="retainer-type retainer-type-{{ transaction.transaction_type }}">{{ transaction.transaction_type|title }}</span></td>
+                            <td class="money {% if transaction.transaction_type == 'contribution' %}money-positive{% else %}money-negative{% endif %}">
+                                {% if transaction.transaction_type == 'contribution' %}+{% else %}−{% endif %}{{ format_money(transaction.amount) }}
+                            </td>
+                            <td class="retainer-note">{{ transaction.note or '—' }}</td>
+                            <td>
+                                <form action="{{ url_for('retainers.delete_transaction', transaction_id=transaction.id) }}" method="post" class="delete-form">
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state retainer-empty-history">
+                <p>No contributions or deductions recorded yet.</p>
+                <button type="button" class="btn btn-primary" onclick="openModal('retainer-transaction-modal-{{ retainer.id }}')">Add First Transaction</button>
+            </div>
+            {% endif %}
+        </div>
+    </details>
+
+    <div id="retainer-transaction-modal-{{ retainer.id }}" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Transaction — {{ retainer.client_name }}</h3>
+            </div>
+            <form action="{{ url_for('retainers.add_transaction', retainer_id=retainer.id) }}" method="post">
+                <div class="form-group">
+                    <label class="form-label" for="transaction-type-{{ retainer.id }}">Transaction type</label>
+                    <select id="transaction-type-{{ retainer.id }}" name="transaction_type" class="form-select" required>
+                        <option value="contribution">Contribution</option>
+                        <option value="deduction">Deduction</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="amount-{{ retainer.id }}">Amount</label>
+                        <input id="amount-{{ retainer.id }}" type="number" name="amount" class="form-input" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="transaction-date-{{ retainer.id }}">Date</label>
+                        <input id="transaction-date-{{ retainer.id }}" type="date" name="transaction_date" class="form-input" value="{{ now().strftime('%Y-%m-%d') }}" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="note-{{ retainer.id }}">Note / invoice reference</label>
+                    <textarea id="note-{{ retainer.id }}" name="note" class="form-textarea" rows="3" placeholder="e.g., Applied to invoice INV-1042"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Record Transaction</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('retainer-transaction-modal-{{ retainer.id }}')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="empty-state">
+        <p>No client retainers have been set up.</p>
+        {% if available_clients %}
+        <button type="button" class="btn btn-primary" onclick="openModal('retainer-new-modal')">Set Up Your First Retainer</button>
+        {% else %}
+        <p>Add a client before setting up a retainer.</p>
+        <a href="{{ url_for('client_new') }}" class="btn btn-primary">+ New Client</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if available_clients %}
+<div id="retainer-new-modal" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Set Up Client Retainer</h3>
+        </div>
+        <form action="{{ url_for('retainers.create_retainer') }}" method="post">
+            <div class="form-group">
+                <label class="form-label" for="retainer-client">Client</label>
+                <select id="retainer-client" name="client_id" class="form-select" required>
+                    <option value="">Select a client...</option>
+                    {% for client in available_clients %}
+                    <option value="{{ client.id }}">{{ client.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="retainer-account">Account where retainer is held</label>
+                <input id="retainer-account" type="text" name="account" class="form-input" placeholder="e.g., IOLTA Trust Account" required>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Set Up Retainer</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('retainer-new-modal')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (!window.location.hash) return;
+    var targetId;
+    try {
+        targetId = decodeURIComponent(window.location.hash.slice(1));
+    } catch (error) {
+        return;
+    }
+    var target = document.getElementById(targetId);
+    if (target && target.matches('details.retainer-card')) {
+        target.open = true;
+    }
+});
+</script>
+{% endblock %}
