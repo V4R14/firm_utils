@@ -1,0 +1,190 @@
+/* Retainers page — intentionally scoped to retainer-specific classes. */
+
+.retainer-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.retainer-summary-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.retainer-summary-label {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.retainer-summary-value {
+    color: var(--text-color);
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.retainer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.retainer-card {
+    padding: 0;
+    margin-bottom: 0;
+    overflow: hidden;
+}
+
+.retainer-card-summary {
+    display: grid;
+    grid-template-columns: 18px minmax(180px, 1.2fr) minmax(180px, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+    padding: 22px 24px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.retainer-card-summary::-webkit-details-marker {
+    display: none;
+}
+
+.retainer-card-summary:hover {
+    background: var(--hover-bg);
+}
+
+.retainer-disclosure {
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid var(--text-muted);
+    border-bottom: 2px solid var(--text-muted);
+    transform: rotate(-45deg);
+    transition: transform 0.2s ease;
+}
+
+.retainer-card[open] .retainer-disclosure {
+    transform: rotate(45deg) translate(-2px, -2px);
+}
+
+.retainer-client,
+.retainer-balance {
+    display: flex;
+    flex-direction: column;
+}
+
+.retainer-client strong {
+    color: var(--text-color);
+    font-size: 16px;
+}
+
+.retainer-client span,
+.retainer-activity,
+.retainer-balance small {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.retainer-balance {
+    align-items: flex-end;
+    min-width: 110px;
+}
+
+.retainer-balance strong {
+    font-size: 20px;
+}
+
+.retainer-card-body {
+    border-top: 1px solid var(--border-color);
+    padding: 24px;
+}
+
+.retainer-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    margin-bottom: 20px;
+}
+
+.retainer-account-form {
+    flex: 1;
+    max-width: 620px;
+}
+
+.retainer-account-form .form-group {
+    margin-bottom: 0;
+}
+
+.retainer-history-table td {
+    vertical-align: top;
+}
+
+.retainer-type {
+    display: inline-flex;
+    padding: 4px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.retainer-type-contribution {
+    color: var(--success);
+    border-color: color-mix(in srgb, var(--success) 35%, transparent);
+}
+
+.retainer-type-deduction {
+    color: var(--error);
+    border-color: color-mix(in srgb, var(--error) 35%, transparent);
+}
+
+.retainer-note {
+    max-width: 440px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.retainer-empty-history {
+    padding-bottom: 16px;
+}
+
+@media (max-width: 900px) {
+    .retainer-card-summary {
+        grid-template-columns: 18px 1fr auto;
+    }
+
+    .retainer-activity {
+        display: none;
+    }
+
+    .retainer-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .retainer-toolbar > .btn {
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 600px) {
+    .retainer-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .retainer-card-summary {
+        gap: 12px;
+        padding: 18px;
+    }
+
+    .retainer-card-body {
+        padding: 18px;
+    }
+
+    .retainer-balance strong {
+        font-size: 17px;
+    }
+}
