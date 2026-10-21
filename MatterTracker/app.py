@@ -151,14 +151,11 @@ def _replace_placeholder_in_paragraph(paragraph, placeholder, replacement):
     """
     Replace placeholder in a paragraph while keeping run-level formatting as much as possible.
     """
-    if replacement is None or str(replacement).strip() == '':
-        return False
-
     if not paragraph.runs:
         return False
 
     changed = False
-    replacement = str(replacement)
+    replacement = '' if replacement is None else str(replacement)
     paragraph_text = ''.join(run.text for run in paragraph.runs)
     search_from = 0
 
@@ -244,7 +241,11 @@ def _create_invoice_docx(template_path, invoice_data, client_dir=None):
         '[CONTACT]': (invoice_data.get('contact_name') or '').strip(),
         '[EMAIL]': (invoice_data.get('contact_email') or '').strip(),
         '[MATTER]': (invoice_data.get('matter_title') or '').strip(),
-        '[DESCRIPTION]': (invoice_data.get('matter_description') or '').strip(),
+        '[DESCRIPTION]': '\n'.join(
+            str(invoice_data.get(field) or '').strip()
+            for field in ('matter_title', 'deliverable', 'matter_description', 'billing_notes')
+            if str(invoice_data.get(field) or '').strip()
+        ),
         '[HOURS_BILLED]': '',
         '[RATE]': '',
         '[AMOUNT]': ''
@@ -254,7 +255,9 @@ def _create_invoice_docx(template_path, invoice_data, client_dir=None):
     if not hours_warn and not hours_empty:
         placeholders['[HOURS_BILLED]'] = format_number(hours_value)
 
-    rate_value, rate_warn, rate_empty = parse_numeric_value(invoice_data.get('default_rate'))
+    rate_value, rate_warn, rate_empty = parse_numeric_value(invoice_data.get('rate'))
+    if rate_value == 0 and not rate_warn:
+        rate_value, rate_warn, rate_empty = parse_numeric_value(invoice_data.get('default_rate'))
     if not rate_warn and not rate_empty:
         placeholders['[RATE]'] = format_plain_money_number(rate_value)
 
@@ -262,9 +265,31 @@ def _create_invoice_docx(template_path, invoice_data, client_dir=None):
     if not amount_warn and not amount_empty:
         placeholders['[AMOUNT]'] = format_plain_money_number(amount_value)
 
+    if invoice_data.get('fixed_fee_enabled'):
+        placeholders['[HOURS_BILLED]'] = 'Fixed Fee'
+        placeholders['[RATE]'] = ''
+        fixed_fee, _, _ = parse_numeric_value(invoice_data.get('fixed_fee_amount'))
+        line_amount = format_plain_money_number(fixed_fee)
+    else:
+        line_amount = format_plain_money_number(rate_value * hours_value)
+
     try:
         doc = Document(template_path)
+        # The supplied form has a bare dollar sign instead of a line-total token.
+        for table in doc.tables:
+            for row in table.rows:
+                if any('[HOURS_BILLED]' in cell.text for cell in row.cells):
+                    for cell in row.cells:
+                        if cell.text.strip() == '$':
+                            cell.paragraphs[0].add_run('[LINE_AMOUNT]')
+        placeholders['[LINE_AMOUNT]'] = line_amount
         for paragraph in _iter_doc_paragraphs(doc):
+            # Older forms already include the title before the description.
+            _replace_placeholder_in_paragraph(
+                paragraph, '[MATTER] – [DESCRIPTION]', '[DESCRIPTION]'
+            )
+            if invoice_data.get('fixed_fee_enabled'):
+                _replace_placeholder_in_paragraph(paragraph, '$[RATE]', '')
             for placeholder, replacement in placeholders.items():
                 _replace_placeholder_in_paragraph(paragraph, placeholder, replacement)
         doc.save(output_path)
@@ -1123,6 +1148,11 @@ def invoice_new():
                 m.id as matter_id,
                 m.title as matter_title,
                 m.description as matter_description,
+                m.deliverable,
+                m.billing_notes,
+                m.rate,
+                m.fixed_fee_enabled,
+                m.fixed_fee_amount,
                 m.hours_billed_amount as hours_billed_amount,
                 c.name as client_name,
                 c.contact_name as contact_name,
@@ -1161,6 +1191,11 @@ def invoice_new():
                 'contact_email': context_row['contact_email'],
                 'matter_title': context_row['matter_title'],
                 'matter_description': context_row['matter_description'],
+                'deliverable': context_row['deliverable'],
+                'billing_notes': context_row['billing_notes'],
+                'rate': context_row['rate'],
+                'fixed_fee_enabled': context_row['fixed_fee_enabled'],
+                'fixed_fee_amount': context_row['fixed_fee_amount'],
                 'hours_billed_amount': context_row['hours_billed_amount'],
                 'default_rate': context_row['default_rate'],
             }, client_dir=client_dir)
@@ -1184,11 +1219,17 @@ def invoice_new():
     prefill_amount = ''
     if selected_matter:
         matter_row = db.execute(
-            'SELECT rate, hours_billed_amount, reimbursement_amount, fixed_fee_enabled, fixed_fee_amount FROM matters WHERE id = ?',
+            '''SELECT m.rate, m.hours_billed_amount, m.reimbursement_amount,
+                      m.fixed_fee_enabled, m.fixed_fee_amount, c.default_rate
+               FROM matters m JOIN clients c ON m.client_id = c.id WHERE m.id = ?''',
             (selected_matter,)
         ).fetchone()
         if matter_row:
-            total, _ = compute_matter_total(dict(matter_row))
+            billing_data = dict(matter_row)
+            rate, rate_warn, _ = parse_numeric_value(billing_data['rate'])
+            if rate == 0 and not rate_warn:
+                billing_data['rate'] = billing_data['default_rate']
+            total, _ = compute_matter_total(billing_data)
             if total:
                 prefill_amount = f'{total:.2f}'
     return render_template('invoices/form.html', invoice=None, matters=matters, selected_matter=selected_matter, today=today, default_invoice_number=generate_invoice_number(), prefill_amount=prefill_amount)
