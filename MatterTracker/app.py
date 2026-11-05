@@ -234,6 +234,18 @@ def _create_invoice_docx(template_path, invoice_data, client_dir=None):
         stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         output_path = os.path.join(output_dir, f'{safe_client}_{safe_invoice}_{stamp}.docx')
 
+    description_lines = [
+        value
+        for field in ('matter_title', 'deliverable', 'matter_description', 'billing_notes')
+        if (value := (invoice_data.get(field) or '').strip())
+    ]
+    for entry in invoice_data.get('time_entries', ()):
+        # Keep each entry on a single line even if its description spans several.
+        description = ' '.join((entry['description'] or '').split()) or 'Time entry'
+        hours = format_number(entry['hours'])
+        unit = 'hour' if hours == '1' else 'hours'
+        description_lines.append(f'{description} — {hours} {unit}')
+
     placeholders = {
         '[INVOICE_NO]': invoice_number.strip() if invoice_number and str(invoice_number).strip() else '',
         '[DATE_ISSUED]': format_date_long(invoice_data.get('date_issued')),
@@ -241,11 +253,7 @@ def _create_invoice_docx(template_path, invoice_data, client_dir=None):
         '[CONTACT]': (invoice_data.get('contact_name') or '').strip(),
         '[EMAIL]': (invoice_data.get('contact_email') or '').strip(),
         '[MATTER]': (invoice_data.get('matter_title') or '').strip(),
-        '[DESCRIPTION]': '\n'.join(
-            str(invoice_data.get(field) or '').strip()
-            for field in ('matter_title', 'deliverable', 'matter_description', 'billing_notes')
-            if str(invoice_data.get(field) or '').strip()
-        ),
+        '[DESCRIPTION]': '\n'.join(description_lines),
         '[HOURS_BILLED]': '',
         '[RATE]': '',
         '[AMOUNT]': ''
@@ -1179,6 +1187,12 @@ def invoice_new():
         db.commit()
 
         if context_row:
+            time_entries = db.execute('''
+                SELECT description, hours
+                FROM time_entries
+                WHERE matter_id = ?
+                ORDER BY (entry_date IS NULL), entry_date DESC, created_at DESC, id DESC
+            ''', (matter_id,)).fetchall()
             firm_directory = load_settings().get('firm_directory', '')
             client_dir = resolve_client_directory(firm_directory, context_row['client_directory'])
             template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates', 'InvoiceForm.docx')
@@ -1193,6 +1207,7 @@ def invoice_new():
                 'matter_description': context_row['matter_description'],
                 'deliverable': context_row['deliverable'],
                 'billing_notes': context_row['billing_notes'],
+                'time_entries': time_entries,
                 'rate': context_row['rate'],
                 'fixed_fee_enabled': context_row['fixed_fee_enabled'],
                 'fixed_fee_amount': context_row['fixed_fee_amount'],
